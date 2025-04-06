@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import BookSidebar, { Book } from '@/components/BookSidebar';
-import ChatInterface, { Message, GlossaryTerm } from '@/components/ChatInterface';
+import ChatInterface, { Message, GlossaryTerm, Concept } from '@/components/ChatInterface';
 import SettingsPanel from '@/components/SettingsPanel';
 import { useToast } from '@/hooks/use-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -60,12 +59,14 @@ const Index: React.FC = () => {
   const [messages, setMessages] = useState<Record<string, Message[]>>({});
   const [glossaryTerms, setGlossaryTerms] = useState<Record<string, GlossaryTerm[]>>({});
   const [bookmarks, setBookmarks] = useState<Message[]>([]);
+  const [concepts, setConcepts] = useState<Record<string, Concept[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const activeBook = activeBookId ? sampleBooks.find(book => book.id === activeBookId) || null : null;
   const activeMessages = activeBookId ? messages[activeBookId] || [] : [];
   const activeGlossaryTerms = activeBookId ? glossaryTerms[activeBookId] || [] : [];
+  const activeConcepts = activeBookId ? concepts[activeBookId] || [] : [];
 
   const handleSelectBook = (bookId: string) => {
     setActiveBookId(bookId);
@@ -77,6 +78,10 @@ const Index: React.FC = () => {
     
     if (!glossaryTerms[bookId]) {
       setGlossaryTerms(prev => ({ ...prev, [bookId]: [] }));
+    }
+    
+    if (!concepts[bookId]) {
+      setConcepts(prev => ({ ...prev, [bookId]: [] }));
     }
   };
 
@@ -164,6 +169,57 @@ const Index: React.FC = () => {
     });
   };
 
+  const handleAddConcept = (label: string, description: string) => {
+    if (!activeBookId) return;
+    
+    const newConcept: Concept = {
+      id: uuidv4(),
+      label,
+      description,
+      connections: []
+    };
+    
+    setConcepts(prev => ({
+      ...prev,
+      [activeBookId]: [...(prev[activeBookId] || []), newConcept]
+    }));
+    
+    toast({
+      title: "Concept Added",
+      description: `"${label}" has been added to the mind map.`
+    });
+  };
+
+  const handleConnectConcepts = (sourceId: string, targetId: string) => {
+    if (!activeBookId) return;
+    
+    setConcepts(prev => {
+      const bookConcepts = [...(prev[activeBookId] || [])];
+      
+      // Add connection to source concept
+      const sourceIndex = bookConcepts.findIndex(concept => concept.id === sourceId);
+      if (sourceIndex >= 0) {
+        const sourceConcept = bookConcepts[sourceIndex];
+        if (!sourceConcept.connections.includes(targetId)) {
+          bookConcepts[sourceIndex] = {
+            ...sourceConcept,
+            connections: [...sourceConcept.connections, targetId]
+          };
+        }
+      }
+      
+      return {
+        ...prev,
+        [activeBookId]: bookConcepts
+      };
+    });
+    
+    toast({
+      title: "Connection Created",
+      description: "Concepts have been connected in the mind map."
+    });
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden">
       <BookSidebar
@@ -181,6 +237,9 @@ const Index: React.FC = () => {
         glossaryTerms={activeGlossaryTerms}
         onAddGlossaryTerm={handleAddGlossaryTerm}
         bookmarks={bookmarks}
+        concepts={activeConcepts}
+        onAddConcept={handleAddConcept}
+        onConnectConcepts={handleConnectConcepts}
       />
       
       <SettingsPanel
