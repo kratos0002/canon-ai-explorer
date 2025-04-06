@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { Settings, Key } from 'lucide-react';
 
 interface SettingsPanelProps {
   open: boolean;
@@ -27,21 +28,26 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[425px] border-t-4 border-t-canon-purple">
+        <DialogHeader className="flex flex-row items-center gap-2">
+          <Settings className="h-5 w-5 text-canon-purple" />
           <DialogTitle className="font-serif">Settings</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="api-key">OpenAI API Key</Label>
+            <div className="flex items-center">
+              <Key className="h-4 w-4 mr-2 text-canon-purple" />
+              <Label htmlFor="api-key">OpenAI API Key</Label>
+            </div>
             <Input
               id="api-key"
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               placeholder="sk-..."
+              className="font-mono text-sm"
             />
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground pl-6">
               Your API key is stored locally and never sent to our servers.
             </p>
           </div>
@@ -50,7 +56,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ open, onClose }) => {
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSaveSettings}>Save Changes</Button>
+          <Button onClick={handleSaveSettings} className="btn-hover-effect">Save Changes</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
